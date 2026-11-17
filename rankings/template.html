@@ -1,0 +1,223 @@
+<title>__SITE_NAME__ Road Rankings</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700;800&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: a results board. One state at a time, a bold timing-board header, then a dense ranked table. */
+:root {
+  --bg: #F3F5F4;
+  --surface: #FFFFFF;
+  --ink: #14211F;
+  --muted: #5B6B68;
+  --line: #D9E0DE;
+  --accent: #D9480F;         /* bib-number orange */
+  --accent-soft: #FBE6DC;
+  --board: #13302B;          /* timing-board green */
+  --board-ink: #F1F6F4;
+  --gold: #B7861B;
+  --display: "Barlow Condensed", "Arial Narrow", "Helvetica Neue", sans-serif;
+  --body: "IBM Plex Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --mono: "IBM Plex Mono", ui-monospace, "SF Mono", Menlo, monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #0E1514; --surface: #151F1D; --ink: #E7EEEC; --muted: #93A39F; --line: #263432;
+    --accent: #FF7A3D; --accent-soft: #3A2116; --board: #0A2621; --board-ink: #EAF3F0; --gold: #E0B04A;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #0E1514; --surface: #151F1D; --ink: #E7EEEC; --muted: #93A39F; --line: #263432;
+  --accent: #FF7A3D; --accent-soft: #3A2116; --board: #0A2621; --board-ink: #EAF3F0; --gold: #E0B04A;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+body { background: var(--bg); color: var(--ink); font-family: var(--body); font-size: 15px; line-height: 1.5; }
+.wrap { max-width: 1040px; margin: 0 auto; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
+
+.board { background: var(--board); color: var(--board-ink); }
+.board .wrap { padding-block: 28px 24px; display: grid; gap: 18px; }
+.brand { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
+.brand h1 { margin: 0; font-family: var(--display); font-weight: 800; font-size: 34px; letter-spacing: 0.02em; text-transform: uppercase; }
+.brand h1 span { color: var(--accent); }
+.brand p { margin: 0; font-size: 13px; opacity: 0.75; }
+.statehead { display: flex; align-items: flex-end; justify-content: space-between; gap: 16px; flex-wrap: wrap; }
+.statehead .code { font-family: var(--display); font-weight: 800; font-size: clamp(64px, 14vw, 120px); line-height: 0.85; letter-spacing: -0.01em; }
+.statehead .name { font-family: var(--display); font-weight: 600; font-size: 22px; text-transform: uppercase; letter-spacing: 0.08em; opacity: 0.85; }
+.picker { display: grid; gap: 6px; min-width: 220px; }
+.picker label { font-size: 11px; text-transform: uppercase; letter-spacing: 0.12em; opacity: 0.7; }
+select { font: 500 15px var(--body); padding: 9px 12px; border-radius: 6px; border: 1px solid color-mix(in srgb, var(--board-ink) 30%, transparent); background: color-mix(in srgb, var(--board-ink) 8%, var(--board)); color: var(--board-ink); }
+select:focus-visible, button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+.sample { background: var(--accent-soft); color: var(--ink); font-size: 13px; }
+.sample .wrap { padding-block: 8px; }
+
+.controls { display: flex; gap: 12px 20px; flex-wrap: wrap; align-items: center; padding-block: 20px 12px; }
+.seg { display: inline-flex; border: 1px solid var(--line); border-radius: 8px; overflow: hidden; background: var(--surface); }
+.seg button { font: 600 13px var(--body); border: 0; background: transparent; color: var(--muted); padding: 8px 14px; cursor: pointer; }
+.seg button + button { border-left: 1px solid var(--line); }
+.seg button[aria-pressed="true"] { background: var(--ink); color: var(--bg); }
+.seg button:hover:not([aria-pressed="true"]) { color: var(--ink); }
+.dist[hidden] { display: none !important; }
+
+.explain { color: var(--muted); font-size: 13px; max-width: 70ch; margin: 0 0 14px; }
+
+.tablebox { background: var(--surface); border: 1px solid var(--line); border-radius: 10px; overflow-x: auto; margin-bottom: 40px; }
+table { width: 100%; border-collapse: collapse; min-width: 560px; }
+th { font: 600 11px var(--body); text-transform: uppercase; letter-spacing: 0.1em; color: var(--muted); text-align: left; padding: 10px 14px; border-bottom: 1px solid var(--line); white-space: nowrap; }
+td { padding: 10px 14px; border-bottom: 1px solid var(--line); vertical-align: top; }
+tr:last-child td { border-bottom: 0; }
+.rk { width: 56px; font-family: var(--display); font-weight: 700; font-size: 22px; line-height: 1.1; color: var(--muted); font-variant-numeric: tabular-nums; }
+tr.podium .rk { color: var(--accent); }
+.who b { font-weight: 600; display: block; }
+.who small { color: var(--muted); font-size: 12.5px; }
+.num { font-family: var(--mono); font-variant-numeric: tabular-nums; white-space: nowrap; font-weight: 500; }
+.race { color: var(--muted); font-size: 13px; }
+.race b { color: var(--ink); font-weight: 500; display: block; }
+.score { display: flex; align-items: center; gap: 10px; }
+.bar { flex: 0 0 80px; height: 6px; border-radius: 3px; background: var(--line); overflow: hidden; }
+.bar i { display: block; height: 100%; background: var(--accent); }
+.more { display: block; font: 600 12px var(--body); color: var(--accent); background: none; border: 0; padding: 4px 0 0; cursor: pointer; }
+.counting { margin: 8px 0 2px; padding: 0; list-style: none; display: grid; gap: 8px; font-size: 12.5px; color: var(--muted); }
+.counting li { display: grid; grid-template-columns: auto auto 1fr; gap: 2px 10px; align-items: baseline; }
+.counting .where { grid-column: 1 / -1; }
+.counting .pts { justify-self: end; }
+@media (min-width: 700px) { .counting li { grid-template-columns: 92px 72px 1fr auto; } .counting .where { grid-column: 3; grid-row: 1; } .counting .pts { grid-column: 4; } }
+.counting .tag { font: 700 11px var(--display); letter-spacing: 0.08em; text-transform: uppercase; color: var(--ink); background: var(--bg); border: 1px solid var(--line); padding: 0 6px; border-radius: 4px; }
+.empty { padding: 40px 20px; text-align: center; color: var(--muted); }
+footer { color: var(--muted); font-size: 12.5px; padding-block: 0 40px; }
+
+@media (max-width: 560px) {
+  .hide-sm { display: none; }
+  table { min-width: 0; }
+  td, th { padding: 9px 10px; }
+  .bar { display: none; }
+}
+@media (prefers-reduced-motion: no-preference) { .bar i { transition: width 300ms ease; } }
+</style>
+
+<header class="board">
+  <div class="wrap">
+    <div class="brand">
+      <h1 id="siteName">__SITE_NAME__</h1>
+      <p id="tagline"></p>
+    </div>
+    <div class="statehead">
+      <div>
+        <div class="code" id="stCode">TX</div>
+        <div class="name" id="stName">Texas</div>
+      </div>
+      <div class="picker">
+        <label for="statePick">State</label>
+        <select id="statePick"></select>
+      </div>
+    </div>
+  </div>
+</header>
+<div class="sample" id="sampleNote" hidden><div class="wrap">Sample data for previewing the design. Names and races are invented. Real rankings appear after the first RunSignup sync.</div></div>
+
+<main class="wrap">
+  <div class="controls">
+    <div class="seg" role="group" aria-label="Ranking type" id="viewSeg">
+      <button type="button" data-view="power" aria-pressed="true">Power Rankings</button>
+      <button type="button" data-view="top" aria-pressed="false">Top Times</button>
+    </div>
+    <div class="seg" role="group" aria-label="Gender" id="genderSeg">
+      <button type="button" data-g="M" aria-pressed="true">Men</button>
+      <button type="button" data-g="F" aria-pressed="false">Women</button>
+    </div>
+    <div class="seg dist" role="group" aria-label="Distance" id="distSeg" hidden></div>
+  </div>
+  <p class="explain" id="explain"></p>
+  <div class="tablebox"><table id="tbl"></table></div>
+</main>
+<footer class="wrap" id="foot"></footer>
+
+<script>
+const DATA = /*__DATA__*/null;
+const S = { st: "TX", view: "power", g: "M", dist: "5k", open: new Set() };
+const $ = id => document.getElementById(id);
+const esc = s => String(s ?? "").replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+const fmt = sec => { const s = Math.round(sec), h = Math.floor(s / 3600), m = Math.floor(s % 3600 / 60), r = s % 60;
+  return h ? `${h}:${String(m).padStart(2, "0")}:${String(r).padStart(2, "0")}` : `${m}:${String(r).padStart(2, "0")}`; };
+const fdate = d => new Date(d + "T12:00:00").toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
+
+function init() {
+  $("tagline").textContent = DATA.meta.tagline;
+  $("sampleNote").hidden = !DATA.meta.sample;
+  const codes = Object.keys(DATA.states);
+  const withData = new Set([...Object.keys(DATA.top), ...Object.keys(DATA.power)]);
+  $("statePick").innerHTML = codes.map(c =>
+    `<option value="${c}">${esc(DATA.states[c])}${withData.has(c) ? "" : " (no results yet)"}</option>`).join("");
+  $("distSeg").innerHTML = Object.entries(DATA.distances).map(([k, l]) =>
+    `<button type="button" data-d="${k}" aria-pressed="${k === S.dist}">${esc(l === "Half Marathon" ? "Half" : l)}</button>`).join("");
+  $("foot").textContent = `Rolling 12-month rankings from official RunSignup results. Runners are ranked in their home state. ` +
+    (DATA.meta.lastSync ? `Last sync ${DATA.meta.lastSync.slice(0, 10)}.` : "");
+
+  const first = withData.has("TX") ? "TX" : [...withData][0] || "TX";
+  fromHash(first);
+  $("statePick").addEventListener("change", e => { location.hash = e.target.value.toLowerCase(); });
+  window.addEventListener("hashchange", () => fromHash(S.st));
+  seg("viewSeg", "view", v => (S.view = v));
+  seg("genderSeg", "g", v => (S.g = v));
+  seg("distSeg", "d", v => (S.dist = v));
+  $("tbl").addEventListener("click", e => {
+    const b = e.target.closest("[data-open]"); if (!b) return;
+    const k = b.dataset.open; S.open.has(k) ? S.open.delete(k) : S.open.add(k); render();
+  });
+}
+function fromHash(fallback) {
+  const h = location.hash.slice(1).toUpperCase();
+  S.st = DATA.states[h] ? h : fallback; S.open.clear(); render();
+}
+function seg(id, attr, set) {
+  $(id).addEventListener("click", e => {
+    const b = e.target.closest("button"); if (!b) return;
+    set(b.dataset[attr]); S.open.clear();
+    $(id).querySelectorAll("button").forEach(x => x.setAttribute("aria-pressed", x === b));
+    render();
+  });
+}
+
+function render() {
+  $("stCode").textContent = S.st;
+  $("stName").textContent = DATA.states[S.st];
+  $("statePick").value = S.st;
+  $("distSeg").hidden = S.view !== "top";
+  S.view === "power" ? renderPower() : renderTop();
+}
+function renderPower() {
+  $("explain").textContent = "Power Score blends each runner's three best races at any distance (50 / 30 / 20). Bigger fields and beating other strong runners earn extra credit, so consistent racing against good competition rises to the top.";
+  const rows = DATA.power[S.st]?.[S.g] || [];
+  if (!rows.length) return empty();
+  const max = rows[0][2];
+  $("tbl").innerHTML = `<thead><tr><th>#</th><th>Runner</th><th>Power score</th><th class="hide-sm">Races</th></tr></thead><tbody>` +
+    rows.map(([name, city, score, races, counting], i) => {
+      const k = `${S.st}${S.g}${i}`, open = S.open.has(k);
+      return `<tr class="${i < 3 ? "podium" : ""}"><td class="rk">${i + 1}</td>
+        <td class="who"><b>${esc(name)}</b><small>${esc(city)}</small>
+          <button type="button" class="more" data-open="${k}" aria-expanded="${open}">${open ? "Hide" : "Show"} counting races</button>
+          ${open ? `<ul class="counting">${counting.map(([d, sec, race, date, pts]) =>
+            `<li><span class="tag">${esc(DATA.distances[d])}</span><span class="num">${fmt(sec)}</span><span class="num pts">${pts.toFixed(0)} pts</span><span class="where">${esc(race)}, ${fdate(date)}</span></li>`).join("")}</ul>` : ""}
+        </td>
+        <td><div class="score"><span class="num">${score.toFixed(1)}</span><span class="bar" aria-hidden="true"><i style="width:${(score / max * 100).toFixed(1)}%"></i></span></div></td>
+        <td class="num hide-sm">${races}</td></tr>`;
+    }).join("") + "</tbody>";
+}
+function renderTop() {
+  $("explain").textContent = `Each runner's single fastest ${DATA.distances[S.dist]} in the last 12 months. Chip time where the race reports it.`;
+  const rows = DATA.top[S.st]?.[S.dist]?.[S.g] || [];
+  if (!rows.length) return empty();
+  $("tbl").innerHTML = `<thead><tr><th>#</th><th>Runner</th><th>Time</th><th>Race</th></tr></thead><tbody>` +
+    rows.map(([name, city, sec, race, date], i) =>
+      `<tr class="${i < 3 ? "podium" : ""}"><td class="rk">${i + 1}</td>
+        <td class="who"><b>${esc(name)}</b><small>${esc(city)}</small></td>
+        <td class="num">${fmt(sec)}</td>
+        <td class="race"><b>${esc(race)}</b>${fdate(date)}</td></tr>`).join("") + "</tbody>";
+}
+function empty() {
+  $("tbl").innerHTML = `<tbody><tr><td class="empty">No ranked results for ${esc(DATA.states[S.st])} yet. Rankings fill in as races post results to RunSignup.</td></tr></tbody>`;
+}
+init();
+</script>
