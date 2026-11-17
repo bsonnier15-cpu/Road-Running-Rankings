@@ -41,7 +41,7 @@ def load_performances(conn, as_of=None):
     since = (as_of - timedelta(days=LOOKBACK_DAYS)).isoformat()
     rows = conn.execute(
         """SELECT r.result_id, r.runner_id, r.seconds, r.event_id,
-                  e.distance_key, e.event_date, e.finishers,
+                  e.distance_key, e.event_date, e.finishers, e.race_id,
                   ra.name AS race_name, ra.city AS race_city, ra.state AS race_state,
                   u.first_name, u.last_name, u.gender, u.state, u.city, u.birth_year
            FROM results r

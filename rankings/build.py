@@ -26,13 +26,13 @@ def payload(conn, as_of=None):
     top_out, power_out = {}, {}
     for (st, dist, g), entries in tops.items():
         top_out.setdefault(st, {}).setdefault(dist, {})[g] = [
-            [runner_name(p), p["city"] or "", round(p["seconds"], 1), p["race_name"], p["event_date"]]
+            [runner_name(p), p["city"] or "", round(p["seconds"], 1), p["race_name"], p["event_date"], p["race_id"]]
             for p in entries
         ]
     for (st, g), runners in power.items():
         power_out.setdefault(st, {})[g] = [
             [runner_name(r), r["city"] or "", round(r["score"], 1), r["races"],
-             [[p["distance_key"], round(p["seconds"], 1), p["race_name"], p["event_date"], round(p["points"], 1)]
+             [[p["distance_key"], round(p["seconds"], 1), p["race_name"], p["event_date"], round(p["points"], 1), p["race_id"]]
               for p in r["counting"]]]
             for r in runners
         ]
@@ -56,7 +56,9 @@ def build(db_path=None, out_dir=None, as_of=None):
     with connect(Path(db_path) if db_path else None) as conn:
         data = payload(conn, as_of)
     blob = json.dumps(data, separators=(",", ":")).replace("</", "<\\/")
-    body = TEMPLATE.read_text().replace("__SITE_NAME__", SITE_NAME).replace("/*__DATA__*/null", blob)
+    flags = TEMPLATE.with_name("flags.js").read_text()
+    body = (TEMPLATE.read_text().replace("__SITE_NAME__", SITE_NAME)
+            .replace("/*__FLAGS__*/", flags).replace("/*__DATA__*/null", blob))
     # Fragment (no doctype) is what the Claude preview publishes; index.html is the full page for GitHub Pages.
     (out_dir / "preview.html").write_text(body)
     page = ('<!doctype html>\n<html lang="en">\n<head>\n<meta charset="utf-8">\n'
