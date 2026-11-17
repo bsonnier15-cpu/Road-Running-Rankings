@@ -8,10 +8,9 @@ on:
       days:
         description: "Days of results to pull (use 365 for a full backfill)"
         default: "14"
-              states:
+      states:
         description: "States to sync, separated by spaces, e.g. TX LA (leave blank for all)"
         default: ""
-              
 
 permissions:
   contents: write
@@ -39,6 +38,8 @@ jobs:
           RSU_API_REG: ${{ secrets.RSU_API_REG }}
           RSU_API_REG_SECRET: ${{ secrets.RSU_API_REG_SECRET }}
         run: python -m rankings.sync --days "${{ github.event.inputs.days || '14' }}" ${{ github.event.inputs.states && format('--states {0}', github.event.inputs.states) || '' }}
+
+      - name: Build site
         run: python -m rankings.build
 
       - name: Commit database
