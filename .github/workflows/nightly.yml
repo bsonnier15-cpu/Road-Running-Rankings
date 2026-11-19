@@ -1,8 +1,8 @@
-name: Nightly sync and deploy
+name: Weekly sync and deploy
 
 on:
   schedule:
-    - cron: "17 8 * * *"   # 3:17am Central, after most weekend results post
+    - cron: "17 9 * * 2"   # Tuesdays 3:17am Central, after weekend results are posted
   workflow_dispatch:
     inputs:
       days:
@@ -18,7 +18,7 @@ permissions:
   id-token: write
 
 concurrency:
-  group: nightly
+  group: weekly-sync
   cancel-in-progress: false
 
 jobs:
@@ -47,7 +47,7 @@ jobs:
           git config user.name "rankings-bot"
           git config user.email "rankings-bot@users.noreply.github.com"
           git add data/rankings.db
-          git diff --cached --quiet || git commit -m "Nightly sync $(date -u +%F)"
+          git diff --cached --quiet || git commit -m "Weekly sync $(date -u +%F)"
           git push
 
       - uses: actions/upload-pages-artifact@v3
