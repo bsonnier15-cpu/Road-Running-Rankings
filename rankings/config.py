@@ -2,8 +2,10 @@
 import os
 from pathlib import Path
 
-SITE_NAME = os.environ.get("SITE_NAME", "50x50")
-SITE_TAGLINE = "The top 50 road runners in every state"
+SITE_NAME = os.environ.get("SITE_NAME", "Statewide")
+SITE_TAGLINE = "The fastest road runners in every state"
+# Each state's page is titled with this pattern, e.g. "The Texas 50"
+STATE_PAGE_NAME = os.environ.get("STATE_PAGE_NAME", "The {state} 50")
 
 ROOT = Path(__file__).resolve().parent.parent
 DB_PATH = Path(os.environ.get("DB_PATH", ROOT / "data" / "rankings.db"))

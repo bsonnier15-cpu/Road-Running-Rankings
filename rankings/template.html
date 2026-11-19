@@ -1,139 +1,179 @@
-<title>__SITE_NAME__ Road Rankings</title>
-<meta name="claude:viewport-fit-sides" content="cover">
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>__SITE_NAME__</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700;800&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700;800&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@500&display=swap">
 <style>
-/* Layout: a results board. One state at a time: its flag behind a bold header, its colors in the table. */
+/* VOICE: race-morning energy, proud of the home state, precise about the numbers.
+   IDEA: a finish-line results board hung in front of the state flag.
+   PICTURE: the state flag fills the hero; the top three are printed race bibs.
+   COLOUR and TYPE: the flag's own colours lead; bib-number condensed caps + Plex for data.
+   LAYOUT: hero with title and stats over the flag, bib podium, ranked board, state grid. */
 :root {
-  --st-field: #13302B;       /* set per state from its flag */
-  --st-accent: #D9480F;
-  --bg: #F3F5F4;
-  --surface: #FFFFFF;
-  --ink: #14211F;
-  --muted: #5B6B68;
-  --line: #D9E0DE;
-  --accent: var(--st-accent);
-  --accent-soft: color-mix(in srgb, var(--st-accent) 14%, #FFFFFF);
-  --board: color-mix(in srgb, var(--st-field) 42%, #061210);
-  --board-ink: #F1F6F4;
-  --gold: #B7861B;
+  color-scheme: light dark;
+  --st-field: #002868;
+  --st-accent: #BF0A30;
+  --bg: light-dark(#F4F6F5, #0D1312);
+  --surface: light-dark(#FFFFFF, #141C1B);
+  --ink: light-dark(#121A19, #E9EFEE);
+  --muted: light-dark(#56635F, #97A6A2);
+  --line: light-dark(#DDE3E1, #25302E);
+  --accent: light-dark(var(--st-accent), color-mix(in srgb, var(--st-accent) 55%, #FFFFFF));
+  --accent-soft: light-dark(color-mix(in srgb, var(--st-accent) 10%, #FFFFFF), color-mix(in srgb, var(--st-accent) 22%, #0D1312));
+  --night: color-mix(in srgb, var(--st-field) 45%, #050A0A);
+  --btn: color-mix(in srgb, var(--st-accent) 82%, #000000);
   --display: "Barlow Condensed", "Arial Narrow", "Helvetica Neue", sans-serif;
   --body: "IBM Plex Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
   --mono: "IBM Plex Mono", ui-monospace, "SF Mono", Menlo, monospace;
+  padding-top: env(safe-area-inset-top, 0px);
+  padding-bottom: env(safe-area-inset-bottom, 0px);
 }
-@media (prefers-color-scheme: dark) {
-  :root:not([data-theme="light"]) {
-    --bg: #0E1514; --surface: #151F1D; --ink: #E7EEEC; --muted: #93A39F; --line: #263432;
-    --accent: color-mix(in srgb, var(--st-accent) 62%, #FFFFFF);
-    --accent-soft: color-mix(in srgb, var(--st-accent) 28%, #0E1514);
-    --board: color-mix(in srgb, var(--st-field) 32%, #040B0A); --board-ink: #EAF3F0; --gold: #E0B04A;
-    color-scheme: dark;
-  }
-}
-:root[data-theme="dark"] {
-  --bg: #0E1514; --surface: #151F1D; --ink: #E7EEEC; --muted: #93A39F; --line: #263432;
-  --accent: color-mix(in srgb, var(--st-accent) 62%, #FFFFFF);
-  --accent-soft: color-mix(in srgb, var(--st-accent) 28%, #0E1514);
-  --board: color-mix(in srgb, var(--st-field) 32%, #040B0A); --board-ink: #EAF3F0; --gold: #E0B04A;
-  color-scheme: dark;
-}
-* { box-sizing: border-box; }
-body { background: var(--bg); color: var(--ink); font-family: var(--body); font-size: 15px; line-height: 1.5; }
-.wrap { max-width: 1040px; margin: 0 auto; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
+:root[data-theme="light"] { color-scheme: light; }
+:root[data-theme="dark"] { color-scheme: dark; }
+* { box-sizing: border-box; min-width: 0; }
+[hidden] { display: none !important; }
+body { margin: 0; background: var(--bg); color: var(--ink); font: 16px/1.55 var(--body); overflow-x: clip; }
+.wrap { max-width: 1180px; margin: 0 auto; padding-left: max(20px, env(safe-area-inset-left, 0px)); padding-right: max(20px, env(safe-area-inset-right, 0px)); }
+a { color: inherit; }
+button, select { font: inherit; }
+:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
 
-.board { position: relative; overflow: hidden; isolation: isolate; background: var(--board); color: var(--board-ink); }
-.board .flag { position: absolute; inset: 0; z-index: -2; }
-.board .flag svg { width: 100%; height: 100%; display: block; }
-.board::after { content: ""; position: absolute; inset: 0; z-index: -1; pointer-events: none;
-  background: linear-gradient(90deg, color-mix(in srgb, var(--board) 88%, transparent) 0%, color-mix(in srgb, var(--board) 55%, transparent) 34%, color-mix(in srgb, var(--board) 8%, transparent) 70%, transparent 100%); }
-.brand p { background: color-mix(in srgb, var(--board) 70%, transparent); padding: 3px 8px; border-radius: 4px; opacity: 1 !important; }
-.board .wrap { padding-block: 28px 24px; display: grid; gap: 18px; text-shadow: 0 1px 12px color-mix(in srgb, var(--board) 70%, transparent); }
-@media (max-width: 560px) { .board::after { background: linear-gradient(90deg, color-mix(in srgb, var(--board) 78%, transparent), color-mix(in srgb, var(--board) 35%, transparent)); } }
-@media (prefers-reduced-motion: no-preference) { .board .flag { animation: flagIn 500ms ease both; } @keyframes flagIn { from { opacity: 0.4; transform: scale(1.03); } } }
-.brand { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
-.brand h1 { margin: 0; font-family: var(--display); font-weight: 800; font-size: 34px; letter-spacing: 0.02em; text-transform: uppercase; }
-.brand h1 span { color: var(--accent); }
-.brand p { margin: 0; font-size: 13px; opacity: 0.75; }
-.statehead { display: flex; align-items: flex-end; justify-content: space-between; gap: 16px; flex-wrap: wrap; }
-.statehead .code { font-family: var(--display); font-weight: 800; font-size: clamp(64px, 14vw, 120px); line-height: 0.85; letter-spacing: -0.01em; }
-.statehead .name { font-family: var(--display); font-weight: 600; font-size: 22px; text-transform: uppercase; letter-spacing: 0.08em; opacity: 0.85; }
-.picker { display: grid; gap: 6px; min-width: 220px; }
-.picker label { font-size: 11px; text-transform: uppercase; letter-spacing: 0.12em; opacity: 0.7; }
-select { font: 500 15px var(--body); padding: 9px 12px; border-radius: 6px; border: 1px solid color-mix(in srgb, var(--board-ink) 30%, transparent); background: color-mix(in srgb, var(--board-ink) 8%, var(--board)); color: var(--board-ink); }
-select:focus-visible, button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+/* Hero: the flag */
+.hero { position: relative; isolation: isolate; overflow: hidden; background: var(--night); color: #FFFFFF; }
+.hero .flag { position: absolute; inset: 0; z-index: -2; }
+.hero .flag svg { width: 100%; height: 100%; display: block; }
+.hero::after { content: ""; position: absolute; inset: 0; z-index: -1;
+  background: linear-gradient(100deg, color-mix(in srgb, var(--night) 92%, transparent) 0%, color-mix(in srgb, var(--night) 70%, transparent) 38%, color-mix(in srgb, var(--night) 12%, transparent) 72%, transparent),
+              linear-gradient(0deg, color-mix(in srgb, var(--night) 60%, transparent), transparent 40%); }
+.topbar { display: flex; align-items: center; justify-content: space-between; gap: 16px; flex-wrap: wrap; padding-block: 18px; }
+.mark { display: flex; align-items: center; gap: 10px; font: 800 26px/1 var(--display); text-transform: uppercase; letter-spacing: 0.02em; text-decoration: none; }
+.mark svg { width: 30px; height: 30px; }
+.pick { display: flex; align-items: center; gap: 10px; padding: 4px 4px 4px 14px; border-radius: 12px; background: color-mix(in srgb, var(--night) 80%, transparent); }
+.pick label { font-size: 14px; }
+.pick select { min-height: 44px; font-size: 16px; padding: 8px 12px; border-radius: 8px; color: #FFFFFF; border: 1px solid rgba(255,255,255,0.35); background: color-mix(in srgb, var(--night) 75%, transparent); }
+.pick select option { color: #121A19; background: #FFFFFF; }
+.herobody { display: grid; gap: 18px; padding-block: clamp(28px, 6vw, 72px) clamp(26px, 4vw, 44px); text-shadow: 0 2px 18px rgba(0,0,0,0.35); }
+.hero h1 { margin: 0; font: 800 clamp(52px, 10vw, 112px)/0.92 var(--display); text-transform: uppercase; letter-spacing: -0.005em; text-wrap: balance; max-width: 11ch; }
+.hero .sub { margin: 0; max-width: 46ch; font-size: 17px; opacity: 0.92; }
+.stats { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 4px; }
+.stat { display: grid; padding: 10px 16px; border-radius: 10px; background: color-mix(in srgb, var(--night) 62%, transparent); border: 1px solid rgba(255,255,255,0.18); backdrop-filter: blur(4px); text-shadow: none; }
+.stat b { font: 700 28px/1.05 var(--display); font-variant-numeric: tabular-nums; }
+.stat span { font-size: 13px; opacity: 0.8; }
 
-.sample { background: var(--accent-soft); color: var(--ink); font-size: 13px; }
-.sample .wrap { padding-block: 8px; }
+.sample { background: var(--accent-soft); font-size: 14px; }
+.sample .wrap { padding-block: 9px; }
 
-.controls { display: flex; gap: 12px 20px; flex-wrap: wrap; align-items: center; padding-block: 20px 12px; }
-.seg { display: inline-flex; border: 1px solid var(--line); border-radius: 8px; overflow: hidden; background: var(--surface); }
-.seg button { font: 600 13px var(--body); border: 0; background: transparent; color: var(--muted); padding: 8px 14px; cursor: pointer; }
+/* Controls */
+.controls { display: flex; gap: 12px 16px; flex-wrap: wrap; align-items: center; padding-block: 28px 8px; }
+.seg { display: inline-flex; flex-wrap: wrap; border: 1px solid var(--line); border-radius: 10px; overflow: hidden; background: var(--surface); }
+.seg button { min-height: 44px; border: 0; background: transparent; color: var(--muted); padding: 0 16px; font-weight: 600; font-size: 15px; cursor: pointer; }
 .seg button + button { border-left: 1px solid var(--line); }
-.seg button[aria-pressed="true"] { background: var(--ink); color: var(--bg); }
+.seg button[aria-pressed="true"] { background: var(--btn); color: #FFFFFF; }
 .seg button:hover:not([aria-pressed="true"]) { color: var(--ink); }
-.dist[hidden] { display: none !important; }
+.explain { color: var(--muted); font-size: 15px; max-width: 72ch; margin: 6px 0 22px; }
 
-.explain { color: var(--muted); font-size: 13px; max-width: 70ch; margin: 0 0 14px; }
+/* Podium: race bibs */
+.podium { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 18px; margin-bottom: 26px; }
+.bib { position: relative; background: #FFFFFF; color: #121A19; border-radius: 10px; overflow: hidden;
+  box-shadow: 0 1px 0 rgba(0,0,0,0.06), 0 10px 26px -14px rgba(0,0,0,0.35); border: 1px solid rgba(0,0,0,0.08); }
+.bib .band { background: var(--btn); color: #FFFFFF; padding: 9px 30px; font: 700 15px/1.2 var(--display); text-transform: uppercase; letter-spacing: 0.04em; display: flex; justify-content: space-between; gap: 8px; }
+.bib .pin { position: absolute; width: 9px; height: 9px; border-radius: 50%; background: #D7DBDA; box-shadow: inset 0 1px 2px rgba(0,0,0,0.35); }
+.bib .pin.tl { top: 13px; left: 11px; } .bib .pin.tr { top: 13px; right: 11px; }
+.bib .pin.bl { bottom: 11px; left: 11px; } .bib .pin.br { bottom: 11px; right: 11px; }
+.bib .body { padding: 10px 26px 24px; display: grid; gap: 2px; }
+.bib .num { font: 800 84px/0.95 var(--display); color: var(--st-field); font-variant-numeric: tabular-nums; }
+.bib .who { font-weight: 600; font-size: 19px; line-height: 1.25; }
+.bib .city { color: #56635F; font-size: 14px; }
+.bib .metric { margin-top: 10px; display: flex; align-items: baseline; gap: 8px; flex-wrap: wrap; }
+.bib .metric b { font: 500 24px var(--mono); font-variant-numeric: tabular-nums; }
+.bib .metric span { color: #56635F; font-size: 13px; }
+.bib .race { color: #56635F; font-size: 13px; margin-top: 4px; }
+.bib .src { margin-left: 0; }
+.bib .src.on { color: var(--st-accent); }
 
-.tablebox { background: var(--surface); border: 1px solid var(--line); border-radius: 10px; overflow-x: auto; margin-bottom: 40px; }
-table { width: 100%; border-collapse: collapse; min-width: 560px; }
-th { font: 600 11px var(--body); text-transform: uppercase; letter-spacing: 0.1em; color: var(--muted); text-align: left; padding: 10px 14px; border-bottom: 1px solid var(--line); white-space: nowrap; }
-td { padding: 10px 14px; border-bottom: 1px solid var(--line); vertical-align: top; }
-tr:last-child td { border-bottom: 0; }
-.rk { width: 56px; font-family: var(--display); font-weight: 700; font-size: 22px; line-height: 1.1; color: var(--muted); font-variant-numeric: tabular-nums; }
-tr.podium .rk { color: var(--accent); }
-.who b { font-weight: 600; display: block; }
-.who small { color: var(--muted); font-size: 12.5px; }
-.num { font-family: var(--mono); font-variant-numeric: tabular-nums; white-space: nowrap; font-weight: 500; }
-.race { color: var(--muted); font-size: 13px; }
-.race b { color: var(--ink); font-weight: 500; display: block; }
-.src { font: 600 12px var(--body); color: var(--accent); text-decoration: none; white-space: nowrap; margin-left: 6px; }
-a.src:hover { text-decoration: underline; }
-a.src:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; border-radius: 2px; }
-.src.off { color: var(--muted); opacity: 0.7; cursor: help; }
-.score { display: flex; align-items: center; gap: 10px; }
-.bar { flex: 0 0 80px; height: 6px; border-radius: 3px; background: var(--line); overflow: hidden; }
+/* Board */
+.board { background: var(--surface); border: 1px solid var(--line); border-radius: 12px; overflow: hidden; margin-bottom: 56px; }
+.board table { width: 100%; border-collapse: collapse; }
+.board th { font-size: 13px; font-weight: 600; color: var(--muted); text-align: left; padding: 12px 16px; border-bottom: 1px solid var(--line); white-space: nowrap; }
+.board td { padding: 12px 16px; border-bottom: 1px solid var(--line); vertical-align: top; }
+.board tr:last-child td { border-bottom: 0; }
+.board th.r, .board td.r { text-align: right; }
+.rk { width: 64px; font: 700 26px/1.1 var(--display); color: var(--muted); font-variant-numeric: tabular-nums; }
+.name b { display: block; font-weight: 600; }
+.name small { color: var(--muted); font-size: 14px; }
+.t { font: 500 16px var(--mono); font-variant-numeric: tabular-nums; white-space: nowrap; }
+.racecell { font-size: 14px; color: var(--muted); }
+.racecell b { display: block; color: var(--ink); font-weight: 500; }
+.bar { display: block; height: 5px; border-radius: 3px; background: var(--line); margin-top: 7px; overflow: hidden; }
 .bar i { display: block; height: 100%; background: var(--accent); }
-.more { display: block; font: 600 12px var(--body); color: var(--accent); background: none; border: 0; padding: 4px 0 0; cursor: pointer; }
-.counting { margin: 8px 0 2px; padding: 0; list-style: none; display: grid; gap: 8px; font-size: 12.5px; color: var(--muted); }
-.counting li { display: grid; grid-template-columns: auto auto 1fr; gap: 2px 10px; align-items: baseline; }
-.counting .where { grid-column: 1 / -1; }
-.counting .pts { justify-self: end; }
-@media (min-width: 700px) { .counting li { grid-template-columns: 92px 72px 1fr auto; } .counting .where { grid-column: 3; grid-row: 1; } .counting .pts { grid-column: 4; } }
-.counting .tag { font: 700 11px var(--display); letter-spacing: 0.08em; text-transform: uppercase; color: var(--ink); background: var(--bg); border: 1px solid var(--line); padding: 0 6px; border-radius: 4px; }
-.empty { padding: 40px 20px; text-align: center; color: var(--muted); }
-footer { color: var(--muted); font-size: 12.5px; padding-block: 0 40px; }
+.more { display: inline-flex; align-items: center; min-height: 32px; padding: 0; margin-top: 2px; background: none; border: 0; color: var(--accent); font-size: 14px; font-weight: 600; cursor: pointer; }
+.counting { list-style: none; margin: 6px 0 2px; padding: 0; display: grid; gap: 8px; font-size: 14px; color: var(--muted); }
+.counting li { display: flex; flex-wrap: wrap; gap: 2px 10px; align-items: baseline; }
+.tag { font: 700 13px/1.4 var(--display); text-transform: uppercase; letter-spacing: 0.04em; color: var(--ink); border: 1px solid var(--line); border-radius: 4px; padding: 0 6px; }
+.src { font-size: 13px; font-weight: 600; color: var(--accent); text-decoration: none; white-space: nowrap; margin-left: 4px; }
+a.src:hover { text-decoration: underline; }
+.src.off { color: var(--muted); cursor: help; }
+.empty { padding: 48px 24px; text-align: center; color: var(--muted); }
 
-@media (max-width: 560px) {
-  .hide-sm { display: none; }
-  table { min-width: 0; }
-  td, th { padding: 9px 10px; }
-  .bar { display: none; }
+/* State grid */
+.states h2 { font: 800 34px/1.05 var(--display); text-transform: uppercase; margin: 0 0 6px; }
+.states p { margin: 0 0 18px; color: var(--muted); }
+.grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(168px, 1fr)); gap: 8px; margin-bottom: 56px; }
+.chip { display: flex; align-items: center; gap: 10px; min-height: 48px; padding: 8px 10px; border-radius: 8px; background: var(--surface); border: 1px solid var(--line); text-decoration: none; font-size: 15px; }
+.chip svg { flex: none; width: 36px; height: 24px; border-radius: 3px; box-shadow: 0 0 0 1px rgba(0,0,0,0.12); }
+.chip:hover { border-color: var(--accent); }
+.chip[aria-current="page"] { border-color: var(--accent); box-shadow: inset 0 0 0 1px var(--accent); font-weight: 600; }
+.chip .dim { color: var(--muted); }
+footer { border-top: 1px solid var(--line); color: var(--muted); font-size: 14px; }
+footer .wrap { padding-block: 22px 40px; display: grid; gap: 6px; max-width: 1180px; }
+
+@media (max-width: 860px) {
+  .podium { grid-template-columns: minmax(0, 1fr); }
+  .bib .body { grid-template-columns: auto 1fr; column-gap: 18px; }
+  .bib .num { grid-row: span 4; font-size: 72px; }
 }
-@media (prefers-reduced-motion: no-preference) { .bar i { transition: width 300ms ease; } }
+@media (max-width: 600px) {
+  .pick label { display: none; }
+  .pick { padding: 0; background: none; }
+  .stats { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
+  .stat { padding: 8px 10px; }
+  .stat b { font-size: 24px; }
+  .stat span { font-size: 12px; line-height: 1.3; }
+  .hero::after { background: color-mix(in srgb, var(--night) 72%, transparent); }
+  .hide-sm { display: none; }
+  .board td, .board th { padding: 10px 12px; }
+  .rk { width: 44px; font-size: 22px; }
+}
+@media (prefers-reduced-motion: no-preference) {
+  .hero .flag { animation: wave 700ms ease-out both; }
+  @keyframes wave { from { opacity: 0.35; transform: scale(1.04); } }
+}
 </style>
-
-<header class="board">
+</head>
+<body>
+<header class="hero">
   <div class="flag" id="flag" aria-hidden="true"></div>
-  <div class="wrap">
-    <div class="brand">
-      <h1 id="siteName">__SITE_NAME__</h1>
-      <p id="tagline"></p>
-    </div>
-    <div class="statehead">
-      <div>
-        <div class="code" id="stCode">TX</div>
-        <div class="name" id="stName">Texas</div>
-      </div>
-      <div class="picker">
-        <label for="statePick">State</label>
-        <select id="statePick"></select>
-      </div>
+  <div class="wrap topbar">
+    <a class="mark" href="#" id="home">
+      <svg viewBox="0 0 30 30" aria-hidden="true"><rect x="1" y="1" width="28" height="28" rx="6" fill="none" stroke="currentColor" stroke-width="2.5"/><path d="M8 21 L13 12 L17 17 L22 8" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      <span id="siteName">__SITE_NAME__</span>
+    </a>
+    <div class="pick">
+      <label for="statePick">Choose a state</label>
+      <select id="statePick"></select>
     </div>
   </div>
+  <div class="wrap herobody">
+    <h1 id="pageName">The Texas 50</h1>
+    <p class="sub" id="pageSub"></p>
+    <div class="stats" id="stats"></div>
+  </div>
 </header>
-<div class="sample" id="sampleNote" hidden><div class="wrap">Sample data for previewing the design. Names and races are invented. Real rankings appear after the first RunSignup sync.</div></div>
+<div class="sample" id="sampleNote" hidden><div class="wrap">Sample data for previewing the design. These runners and races are invented. Real rankings appear after the first RunSignup sync.</div></div>
 
 <main class="wrap">
   <div class="controls">
@@ -145,46 +185,59 @@ footer { color: var(--muted); font-size: 12.5px; padding-block: 0 40px; }
       <button type="button" data-g="M" aria-pressed="true">Men</button>
       <button type="button" data-g="F" aria-pressed="false">Women</button>
     </div>
-    <div class="seg dist" role="group" aria-label="Distance" id="distSeg" hidden></div>
+    <div class="seg" role="group" aria-label="Distance" id="distSeg" hidden></div>
   </div>
   <p class="explain" id="explain"></p>
-  <div class="tablebox"><table id="tbl"></table></div>
+  <section class="podium" id="podium" aria-label="Top three"></section>
+  <div class="board" id="boardWrap"><table id="tbl"></table></div>
+
+  <section class="states" aria-labelledby="statesHead">
+    <h2 id="statesHead">Every state</h2>
+    <p>Fifty states, fifty rankings. Pick one to see its fastest runners.</p>
+    <nav class="grid" id="grid" aria-label="States"></nav>
+  </section>
 </main>
-<footer class="wrap" id="foot"></footer>
+<footer><div class="wrap" id="foot"></div></footer>
 
 <script>
 /*__FLAGS__*/
 const DATA = /*__DATA__*/null;
-function themeState(code) {
-  const f = FLAGS[code]; if (!f) return;
-  const root = document.documentElement.style;
-  root.setProperty("--st-field", f.field);
-  root.setProperty("--st-accent", f.accent);
-  $("flag").innerHTML = `<svg viewBox="0 0 300 200" preserveAspectRatio="xMaxYMid slice" xmlns="http://www.w3.org/2000/svg">${f.draw()}</svg>`;
-}
+{
 const S = { st: "TX", view: "power", g: "M", dist: "5k", open: new Set() };
 const $ = id => document.getElementById(id);
 const esc = s => String(s ?? "").replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
 const fmt = sec => { const s = Math.round(sec), h = Math.floor(s / 3600), m = Math.floor(s % 3600 / 60), r = s % 60;
   return h ? `${h}:${String(m).padStart(2, "0")}:${String(r).padStart(2, "0")}` : `${m}:${String(r).padStart(2, "0")}`; };
 const fdate = d => new Date(d + "T12:00:00").toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
+const stName = c => DATA.states[c];
+const pageName = c => DATA.meta.statePage.replace("{state}", stName(c));
+const flagSvg = (c, ratio) => FLAGS[c] ? `<svg viewBox="0 0 300 200" preserveAspectRatio="${ratio}" xmlns="http://www.w3.org/2000/svg">${FLAGS[c].draw()}</svg>` : "";
+const hasData = c => !!(DATA.power[c] || DATA.top[c]);
+const distLabel = k => DATA.distances[k] === "Half Marathon" ? "Half" : DATA.distances[k];
+
+function src(rid) {
+  if (!rid) return "";
+  if (DATA.meta.sample) return `<span class="src off" title="Sample race: no real results page">Official results</span>`;
+  return `<a class="src on" href="https://runsignup.com/Race/Results/${encodeURIComponent(rid)}" target="_blank" rel="noopener">Official results<span aria-hidden="true"> ↗</span></a>`;
+}
 
 function init() {
-  $("tagline").textContent = DATA.meta.tagline;
-  $("sampleNote").hidden = !DATA.meta.sample;
   const codes = Object.keys(DATA.states);
-  const withData = new Set([...Object.keys(DATA.top), ...Object.keys(DATA.power)]);
-  $("statePick").innerHTML = codes.map(c =>
-    `<option value="${c}">${esc(DATA.states[c])}${withData.has(c) ? "" : " (no results yet)"}</option>`).join("");
-  $("distSeg").innerHTML = Object.entries(DATA.distances).map(([k, l]) =>
-    `<button type="button" data-d="${k}" aria-pressed="${k === S.dist}">${esc(l === "Half Marathon" ? "Half" : l)}</button>`).join("");
-  $("foot").textContent = `Rolling 12-month rankings from official RunSignup results. Runners are ranked in their home state. ` +
-    (DATA.meta.lastSync ? `Last sync ${DATA.meta.lastSync.slice(0, 10)}.` : "");
+  $("sampleNote").hidden = !DATA.meta.sample;
+  $("statePick").innerHTML = codes.map(c => `<option value="${c}">${esc(stName(c))}</option>`).join("");
+  $("distSeg").innerHTML = Object.keys(DATA.distances).map(k =>
+    `<button type="button" data-d="${k}" aria-pressed="${k === S.dist}">${esc(distLabel(k))}</button>`).join("");
+  $("grid").innerHTML = codes.map(c =>
+    `<a class="chip" href="#${c.toLowerCase()}" data-st="${c}">${flagSvg(c, "xMidYMid slice")}<span>${esc(stName(c))}${hasData(c) ? "" : ' <span class="dim">· soon</span>'}</span></a>`).join("");
+  $("foot").innerHTML = `<div><b>${esc(DATA.meta.site)}</b>: ${esc(DATA.meta.tagline)}.</div>
+    <div>Rankings cover the last 12 months of official results from RunSignup races. Runners are ranked in their home state, not where the race was held. Every result links to its official results page.</div>
+    ${DATA.meta.lastSync ? `<div>Last updated ${fdate(DATA.meta.lastSync.slice(0, 10))}.</div>` : ""}`;
 
-  const first = withData.has("TX") ? "TX" : [...withData][0] || "TX";
-  fromHash(first);
+  const fallback = hasData("TX") ? "TX" : codes.find(hasData) || "TX";
+  const fromHash = () => { const h = location.hash.slice(1).toUpperCase(); S.st = DATA.states[h] ? h : fallback; S.open.clear(); render(); };
+  window.addEventListener("hashchange", () => { fromHash(); window.scrollTo({ top: 0 }); });
   $("statePick").addEventListener("change", e => { location.hash = e.target.value.toLowerCase(); });
-  window.addEventListener("hashchange", () => fromHash(S.st));
+  $("home").addEventListener("click", e => { e.preventDefault(); location.hash = fallback.toLowerCase(); });
   seg("viewSeg", "view", v => (S.view = v));
   seg("genderSeg", "g", v => (S.g = v));
   seg("distSeg", "d", v => (S.dist = v));
@@ -192,10 +245,7 @@ function init() {
     const b = e.target.closest("[data-open]"); if (!b) return;
     const k = b.dataset.open; S.open.has(k) ? S.open.delete(k) : S.open.add(k); render();
   });
-}
-function fromHash(fallback) {
-  const h = location.hash.slice(1).toUpperCase();
-  S.st = DATA.states[h] ? h : fallback; S.open.clear(); render();
+  fromHash();
 }
 function seg(id, attr, set) {
   $(id).addEventListener("click", e => {
@@ -206,51 +256,85 @@ function seg(id, attr, set) {
   });
 }
 
+function theme() {
+  const f = FLAGS[S.st]; if (!f) return;
+  const r = document.documentElement.style;
+  r.setProperty("--st-field", f.field);
+  r.setProperty("--st-accent", f.accent);
+  $("flag").innerHTML = flagSvg(S.st, "xMidYMid slice");
+}
+
 function render() {
-  if (render.themed !== S.st) { themeState(S.st); render.themed = S.st; }
-  $("stCode").textContent = S.st;
-  $("stName").textContent = DATA.states[S.st];
+  if (render.st !== S.st) { theme(); render.st = S.st; }
+  const name = pageName(S.st), st = DATA.stats[S.st];
+  document.title = `${name} · ${DATA.meta.site}`;
+  $("pageName").textContent = name;
+  $("pageSub").textContent = `The fastest road runners in ${stName(S.st)} over the last 12 months, ranked from official race results.`;
+  $("stats").innerHTML = st
+    ? `<div class="stat"><b>${st.runners.toLocaleString()}</b><span>runners with results</span></div>
+       <div class="stat"><b>${st.races.toLocaleString()}</b><span>races counted</span></div>
+       <div class="stat"><b>5</b><span>distances, 5K to marathon</span></div>`
+    : `<div class="stat"><b>Coming soon</b><span>No results synced for ${esc(stName(S.st))} yet</span></div>`;
   $("statePick").value = S.st;
   $("distSeg").hidden = S.view !== "top";
+  document.querySelectorAll(".chip").forEach(c =>
+    c.dataset.st === S.st ? c.setAttribute("aria-current", "page") : c.removeAttribute("aria-current"));
   S.view === "power" ? renderPower() : renderTop();
 }
+
+function bib(rank, name, city, metric, unit, raceLine) {
+  return `<article class="bib"><i class="pin tl"></i><i class="pin tr"></i><i class="pin bl"></i><i class="pin br"></i>
+    <div class="band"><span>${esc(pageName(S.st))}</span><span>${S.g === "M" ? "Men" : "Women"}</span></div>
+    <div class="body"><div class="num">${rank}</div><div class="who">${esc(name)}</div><div class="city">${esc(city)}</div>
+    <div class="metric"><b>${metric}</b><span>${unit}</span></div><div class="race">${raceLine}</div></div></article>`;
+}
+
 function renderPower() {
-  $("explain").textContent = "Power Score blends each runner's three best races at any distance (50 / 30 / 20). Bigger fields and beating other strong runners earn extra credit, so consistent racing against good competition rises to the top.";
+  $("explain").textContent = "Power Score blends each runner's three best races at any distance, weighted 50, 30 and 20 percent. Bigger fields and beating other strong runners earn extra credit, so runners who race well against good competition rise to the top.";
   const rows = DATA.power[S.st]?.[S.g] || [];
   if (!rows.length) return empty();
+  $("podium").innerHTML = rows.slice(0, 3).map(([name, city, score, races, counting], i) => {
+    const [d, sec, race, date, , rid] = counting[0];
+    return bib(i + 1, name, city, score.toFixed(1), "power score", `Best: ${esc(distLabel(d))} ${fmt(sec)} at ${esc(race)} ${src(rid)}`);
+  }).join("");
   const max = rows[0][2];
-  $("tbl").innerHTML = `<thead><tr><th>#</th><th>Runner</th><th>Power score</th><th class="hide-sm">Races</th></tr></thead><tbody>` +
-    rows.map(([name, city, score, races, counting], i) => {
-      const k = `${S.st}${S.g}${i}`, open = S.open.has(k);
-      return `<tr class="${i < 3 ? "podium" : ""}"><td class="rk">${i + 1}</td>
-        <td class="who"><b>${esc(name)}</b><small>${esc(city)}</small>
-          <button type="button" class="more" data-open="${k}" aria-expanded="${open}">${open ? "Hide" : "Show"} counting races</button>
+  $("tbl").innerHTML = `<thead><tr><th>Rank</th><th>Runner</th><th class="r">Power score</th><th class="r hide-sm">Races</th></tr></thead><tbody>` +
+    rows.slice(3).map(([name, city, score, races, counting], j) => {
+      const i = j + 3, k = `${S.st}${S.g}${i}`, open = S.open.has(k);
+      return `<tr><td class="rk">${i + 1}</td>
+        <td class="name"><b>${esc(name)}</b><small>${esc(city)}</small><br>
+          <button type="button" class="more" data-open="${k}" aria-expanded="${open}">${open ? "Hide races" : "Show counting races"}</button>
           ${open ? `<ul class="counting">${counting.map(([d, sec, race, date, pts, rid]) =>
-            `<li><span class="tag">${esc(DATA.distances[d])}</span><span class="num">${fmt(sec)}</span><span class="num pts">${pts.toFixed(0)} pts</span><span class="where">${esc(race)}, ${fdate(date)} ${src(rid)}</span></li>`).join("")}</ul>` : ""}
-        </td>
-        <td><div class="score"><span class="num">${score.toFixed(1)}</span><span class="bar" aria-hidden="true"><i style="width:${(score / max * 100).toFixed(1)}%"></i></span></div></td>
-        <td class="num hide-sm">${races}</td></tr>`;
+            `<li><span class="tag">${esc(distLabel(d))}</span><span class="t">${fmt(sec)}</span><span>${esc(race)}, ${fdate(date)}</span>${src(rid)}</li>`).join("")}</ul>` : ""}</td>
+        <td class="r"><span class="t">${score.toFixed(1)}</span><span class="bar" aria-hidden="true"><i style="width:${(score / max * 100).toFixed(1)}%"></i></span></td>
+        <td class="r t hide-sm">${races}</td></tr>`;
     }).join("") + "</tbody>";
+  $("boardWrap").hidden = rows.length <= 3;
 }
-/* Link to the official RunSignup results page. Sample races are invented, so they get no real link. */
-function src(rid) {
-  if (!rid) return "";
-  if (DATA.meta.sample) return `<span class="src off" title="Sample race: no real results page">Official results</span>`;
-  return `<a class="src" href="https://runsignup.com/Race/Results/${encodeURIComponent(rid)}" target="_blank" rel="noopener">Official results<span aria-hidden="true"> ↗</span></a>`;
-}
+
 function renderTop() {
-  $("explain").textContent = `Each runner's single fastest ${DATA.distances[S.dist]} in the last 12 months. Chip time where the race reports it.`;
+  $("explain").textContent = `Each runner's single fastest ${DATA.distances[S.dist].replace(/Marathon/, "marathon").replace(/Half/, "half")} in the last 12 months, using chip time when the race reports it.`;
   const rows = DATA.top[S.st]?.[S.dist]?.[S.g] || [];
   if (!rows.length) return empty();
-  $("tbl").innerHTML = `<thead><tr><th>#</th><th>Runner</th><th>Time</th><th>Race</th></tr></thead><tbody>` +
-    rows.map(([name, city, sec, race, date, rid], i) =>
-      `<tr class="${i < 3 ? "podium" : ""}"><td class="rk">${i + 1}</td>
-        <td class="who"><b>${esc(name)}</b><small>${esc(city)}</small></td>
-        <td class="num">${fmt(sec)}</td>
-        <td class="race"><b>${esc(race)}</b>${fdate(date)} ${src(rid)}</td></tr>`).join("") + "</tbody>";
+  $("podium").innerHTML = rows.slice(0, 3).map(([name, city, sec, race, date, rid], i) =>
+    bib(i + 1, name, city, fmt(sec), distLabel(S.dist), `${esc(race)}, ${fdate(date)} ${src(rid)}`)).join("");
+  $("tbl").innerHTML = `<thead><tr><th>Rank</th><th>Runner</th><th class="r">Time</th><th class="hide-sm">Race</th></tr></thead><tbody>` +
+    rows.slice(3).map(([name, city, sec, race, date, rid], j) =>
+      `<tr><td class="rk">${j + 4}</td>
+        <td class="name"><b>${esc(name)}</b><small>${esc(city)}</small></td>
+        <td class="r t">${fmt(sec)}</td>
+        <td class="racecell hide-sm"><b>${esc(race)}</b>${fdate(date)} ${src(rid)}</td></tr>`).join("") + "</tbody>";
+  $("boardWrap").hidden = rows.length <= 3;
 }
+
 function empty() {
-  $("tbl").innerHTML = `<tbody><tr><td class="empty">No ranked results for ${esc(DATA.states[S.st])} yet. Rankings fill in as races post results to RunSignup.</td></tr></tbody>`;
+  $("podium").innerHTML = "";
+  $("boardWrap").hidden = false;
+  $("tbl").innerHTML = `<tbody><tr><td class="empty">No ranked results for ${esc(stName(S.st))} yet. This page fills in automatically as ${esc(stName(S.st))} races post results to RunSignup.</td></tr></tbody>`;
 }
+
 init();
+}
 </script>
+</body>
+</html>

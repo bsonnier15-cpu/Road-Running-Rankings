@@ -5,14 +5,18 @@
 """
 import argparse
 import json
+from collections import defaultdict
 from datetime import date
 from pathlib import Path
 
-from .config import DISTANCES, SITE_DIR, SITE_NAME, SITE_TAGLINE, US_STATES
+from .config import (DISTANCES, SITE_DIR, SITE_NAME, SITE_TAGLINE,
+                     STATE_PAGE_NAME, US_STATES)
 from .db import connect
+from .ingest import purge_excluded, refresh_finisher_counts
 from .rank import compute
 
-TEMPLATE = Path(__file__).with_name("template.html")
+HERE = Path(__file__).parent
+TEMPLATE = HERE / "template.html"
 
 
 def runner_name(p):
@@ -20,7 +24,7 @@ def runner_name(p):
 
 
 def payload(conn, as_of=None):
-    _, tops, power = compute(conn, as_of)
+    perfs, tops, power = compute(conn, as_of)
     state_rows = dict(conn.execute("SELECT key, value FROM sync_state").fetchall())
 
     top_out, power_out = {}, {}
@@ -37,14 +41,22 @@ def payload(conn, as_of=None):
             for r in runners
         ]
 
+    # Per-state totals for the page header: runners with a result, and races they ran.
+    runners, races = defaultdict(set), defaultdict(set)
+    for p in perfs:
+        runners[p["state"]].add(p["runner_id"])
+        races[p["state"]].add(p["race_id"])
+    stats = {st: {"runners": len(runners[st]), "races": len(races[st])} for st in runners}
+
     return {
         "meta": {
-            "site": SITE_NAME, "tagline": SITE_TAGLINE,
+            "site": SITE_NAME, "tagline": SITE_TAGLINE, "statePage": STATE_PAGE_NAME,
             "lastSync": state_rows.get("last_sync"), "built": (as_of or date.today()).isoformat(),
             "sample": state_rows.get("sample") == "1",
         },
         "states": US_STATES,
         "distances": {k: v[0] for k, v in DISTANCES.items()},
+        "stats": stats,
         "top": top_out,
         "power": power_out,
     }
@@ -54,17 +66,13 @@ def build(db_path=None, out_dir=None, as_of=None):
     out_dir = Path(out_dir or SITE_DIR)
     out_dir.mkdir(parents=True, exist_ok=True)
     with connect(Path(db_path) if db_path else None) as conn:
+        purge_excluded(conn)          # clean out anything synced before a filter existed
+        refresh_finisher_counts(conn)
         data = payload(conn, as_of)
     blob = json.dumps(data, separators=(",", ":")).replace("</", "<\\/")
-    flags = TEMPLATE.with_name("flags.js").read_text()
-    body = (TEMPLATE.read_text().replace("__SITE_NAME__", SITE_NAME)
+    flags = (HERE / "flags.js").read_text()
+    page = (TEMPLATE.read_text().replace("__SITE_NAME__", SITE_NAME)
             .replace("/*__FLAGS__*/", flags).replace("/*__DATA__*/null", blob))
-    # Fragment (no doctype) is what the Claude preview publishes; index.html is the full page for GitHub Pages.
-    (out_dir / "preview.html").write_text(body)
-    page = ('<!doctype html>\n<html lang="en">\n<head>\n<meta charset="utf-8">\n'
-            '<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">\n'
-            '<style>:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}'
-            'body{margin:0}[hidden]{display:none!important}</style>\n</head>\n<body>\n' + body + "\n</body>\n</html>\n")
     (out_dir / "index.html").write_text(page)
     (out_dir / ".nojekyll").write_text("")
     return out_dir / "index.html"

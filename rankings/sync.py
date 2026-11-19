@@ -10,7 +10,7 @@ from datetime import date, datetime, timedelta, timezone
 
 from .config import US_STATES
 from .db import connect
-from .ingest import (add_result, event_distance, parse_event_date,
+from .ingest import (add_result, event_distance, parse_event_date, purge_excluded,
                      refresh_finisher_counts, upsert_event, upsert_race)
 from .runsignup import RunSignup
 
@@ -43,6 +43,7 @@ def sync(states, days, client=None):
                             totals["results"] += 1
                 conn.commit()
             print(f"[{st}] cumulative: {totals}", flush=True)
+        print(f"removed {purge_excluded(conn)} excluded events")
         refresh_finisher_counts(conn)
         conn.execute("INSERT OR REPLACE INTO sync_state VALUES ('last_sync', ?)", (now,))
     return totals

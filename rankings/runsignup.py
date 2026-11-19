@@ -16,6 +16,9 @@ class RunSignup:
     def __init__(self, api_key=None, api_secret=None, pause=0.4):
         self.api_key = api_key or os.environ.get("RSU_API_KEY")
         self.api_secret = api_secret or os.environ.get("RSU_API_SECRET")
+        # Registered API caller (required by RunSignup on every request from 2026 on)
+        self.reg_token = os.environ.get("RSU_API_REG")
+        self.reg_secret = os.environ.get("RSU_API_REG_SECRET")
         self.pause = pause  # be polite: RunSignup rate-limits aggressive callers
 
     def _get(self, path, **params):
@@ -23,9 +26,13 @@ class RunSignup:
         params["format"] = "json"
         if self.api_key:
             params["rsu_api_key"] = self.api_key
+        if self.reg_token:
+            params["rsu_api_reg"] = self.reg_token
         req = urllib.request.Request(f"{BASE}{path}?{urllib.parse.urlencode(params)}")
         if self.api_secret:
             req.add_header("X-RSU-API-SECRET", self.api_secret)
+        if self.reg_secret:
+            req.add_header("X-RSU-API-REG-SECRET", self.reg_secret)
         for attempt in range(4):
             try:
                 with urllib.request.urlopen(req, timeout=60) as resp:

@@ -70,6 +70,18 @@ def add_result(conn, event_id, dist_key, event_date, row, fallback_state=None):
     return True
 
 
+def purge_excluded(conn):
+    """Remove events (and their results) that the current filters reject, e.g. virtual
+    races synced before the filter caught them. Safe to run on every sync and build."""
+    from .normalize import excluded
+    bad = [r["event_id"] for r in conn.execute("SELECT event_id, name FROM events") if excluded(r["name"])]
+    for eid in bad:
+        conn.execute("DELETE FROM results WHERE event_id = ?", (eid,))
+        conn.execute("DELETE FROM events WHERE event_id = ?", (eid,))
+    conn.execute("DELETE FROM runners WHERE runner_id NOT IN (SELECT runner_id FROM results)")
+    return len(bad)
+
+
 def refresh_finisher_counts(conn):
     conn.execute(
         """UPDATE events SET finishers =

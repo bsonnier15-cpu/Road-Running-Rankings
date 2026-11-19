@@ -5,8 +5,19 @@ import unicodedata
 from .config import DISTANCES, MIN_SECONDS, US_STATES
 
 
+EXCLUDE = re.compile(r"relay|walk only|kids|virtual|ultra|50k|challenge|team|volunteer|training program|triathlon|duathlon|spin|bike|swim", re.I)
+
+
+def excluded(*labels):
+    """True if any label marks the event as virtual, a relay, a multisport leg, etc."""
+    return any(EXCLUDE.search(str(l)) for l in labels if l)
+
+
 def distance_key(*labels):
-    """Map free-text event names/distances ("Half Marathon", "13.1 Miles", "5K Run") to a canonical key."""
+    """Map free-text event names/distances ("Half Marathon", "13.1 Miles", "5K Run") to a canonical key.
+    Exclusions are checked across every label, so a 'Virtual 5K' with distance '5K' is still dropped."""
+    if excluded(*labels):
+        return None
     for label in labels:
         if not label:
             continue
@@ -18,9 +29,6 @@ def distance_key(*labels):
         )
         for alias, key in candidates:
             if re.search(r"(?<![\d.])" + re.escape(alias) + r"(?![\d])", text):
-                # Exclude relays, walks, kids, virtual and ultra variants.
-                if re.search(r"relay|walk|kids|virtual|ultra|50k|challenge|team", text):
-                    return None
                 return key
     return None
 
